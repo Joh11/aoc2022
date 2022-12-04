@@ -1,2 +1,2 @@
-(defpackage #:aoc2022
-  (:use #:cl))
+(uiop:define-package #:aoc2022
+    (:use #:cl))

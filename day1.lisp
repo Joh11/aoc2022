@@ -10,9 +10,6 @@
 		   (push (parse-integer l) (car elves))))
       (nreverse (mapcar #'nreverse elves)))))
 
-(defun sum (list)
-  (reduce #'+ list))
-
 (defun index-of-max (list)
   (if (= 0 (length list)) nil
       (let ((max (car list))
