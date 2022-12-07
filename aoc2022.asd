@@ -1,5 +1,3 @@
-;;;; aoc2022.asd
-
 (asdf:defsystem #:aoc2022
   :description "Describe aoc2022 here"
   :author "Your Name <your.name@example.com>"
@@ -14,4 +12,5 @@
 	       (:file "day3")
 	       (:file "day4")
 	       (:file "day5")
-	       (:file "day6")))
+	       (:file "day6")
+	       (:file "day7")))
