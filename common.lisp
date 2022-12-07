@@ -25,3 +25,7 @@
 (defmacro partial (fun &rest args)
   (let ((x (gensym)))
     `(lambda (,x) (,fun ,@args ,x))))
+
+(defmacro aif (test then &optional else)
+  `(let ((it ,test))
+     (if it ,then ,else)))

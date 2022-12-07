@@ -1,11 +1,7 @@
 (in-package #:aoc2022)
 
-(defmacro aif (test then &optional else)
-  `(let ((it ,test))
-     (if it ,then ,else)))
-
 (defun d7/load-data ()
-  (with-open-file (f "data/day7") ;;"test"
+  (with-open-file (f "data/day7")
     ;; two states: :default and :append
     ;; :default looks for commands
     ;; :append add lines to the current ls command, until a command is seen
@@ -24,7 +20,7 @@
 	      while l
 	      do
 		 (case state
-		   (:default (if (command? l) (process-command l) (error "this should not happen")))
+		   (:default (assert (command? l)) (process-command l))
 		   (:append (if (command? l)
 				(progn
 				  (finish-append)
@@ -60,7 +56,7 @@
   (let ((dir (second cmd)))
     (cond ((string= "/" dir) (setf (car directory-stack-wrap) (last (car directory-stack-wrap))))
 	  ((string= ".." dir) (pop (car directory-stack-wrap)))
-	  (t ;; first check if needed to create a new directory
+	  (t
 	   (let ((new-dir (mkdir-if-needed dir (caar directory-stack-wrap))))
 	     (push new-dir (car directory-stack-wrap)))))))
 
@@ -93,7 +89,7 @@
 	finally (return root)))
 
 (defun do-dirs (function root)
-  (when (eq (car root) :dir) ;; if it is a directory, not a file
+  (when (eq (car root) :dir)
     (funcall function root)
     (loop for child in (cddr root)
 	  do (do-dirs function child))))
