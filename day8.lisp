@@ -11,62 +11,66 @@
 (defun parse-tree-line (line)
   (mapcar (lambda (c) (parse-integer (string c))) (coerce line 'list)))
 
-(defun visibility-map (height-map)
-  (let ((vmap (make-array (array-dimensions height-map)
-			  :element-type 'boolean
-			  :initial-element nil))
-	(h (array-dimension height-map 0))
-	(w (array-dimension height-map 1)))
-    ;; first fill the contour
-    (loop for i below h do
-      (setf (aref vmap i 0) t)
-      (setf (aref vmap i (1- h)) t))
-    (loop for j below w do
-      (setf (aref vmap 0 j) t)
-      (setf (aref vmap (1- w) j) t))
+(defun line-of-sight-left (array i j &optional from-edge)
+  (if from-edge
+	(loop for k to j collect (aref array i k))
+	(nreverse (line-of-sight-left array i j t))))
 
-    ;; now the interior
-    (dotimes (j w)
-      ;; top to bottom
-      (loop for i from 1 to (- h 2)
-	    with min = (aref height-map 0 j)
-	    as current = (aref height-map i j)
-	    do
-	       (when (> current min) (setf (aref vmap i j) t))
-	       (setf min (max min current)))
-      ;; bottom to top
-      (loop for i from (- h 2) downto 1
-	    with min = (aref height-map (1- h) j)
-	    as current = (aref height-map i j)
-	    do
-	       (when (> current min) (setf (aref vmap i j) t))
-	       (setf min (max min current))))
-    (dotimes (i h)
-      ;; left to right
-      (loop for j from 1 to (- w 2)
-	    with min = (aref height-map i 0)
-	    as current = (aref height-map i j)
-	    do
-	       (when (> current min) (setf (aref vmap i j) t))
-	       (setf min (max min current)))
-      ;; right to left
-      (loop for j from (- w 2) downto 1
-	    with min = (aref height-map i (1- w))
-	    as current = (aref height-map i j)
-	    do
-	       (format t "min ~a current ~a (~a ~a)~%" min current i j)
-	       (when (> current min) (setf (aref vmap i j) t))
-	       (setf min (max min current))))
-    vmap))
+(defun line-of-sight-right (array i j &optional from-edge)
+  (let ((w (array-dimension array 1)))
+    (if from-edge
+	(nreverse (line-of-sight-right array i j))
+	(loop for k from j below w collect (aref array i k)))))
 
-(defun print-height-map (hmap &optional (format-fn #'identity))
-  (destructuring-bind (h w) (array-dimensions hmap)
-    (dotimes (i h)
-      (dotimes (j w)
-	(format t "~a " (funcall format-fn (aref hmap i j))))
-      (format t "~%"))))
+(defun line-of-sight-top (array i j &optional from-edge)
+  (if from-edge
+      (loop for k from 0 to i collect (aref array k j))
+      (nreverse (line-of-sight-top array i j t))))
+
+(defun line-of-sight-bottom (array i j &optional from-edge)
+  (let ((h (array-dimension array 0)))
+    (if from-edge
+	(nreverse (line-of-sight-bottom array i j))
+	(loop for k from i below h collect (aref array k j)))))
+
+(defun tree-visible? (sight)
+  (> (car sight) (reduce #'max (cdr sight) :initial-value -1)))
+
+(defun viewing-distance (sight)
+  (case (length sight)
+    ((0 1) 0)
+    (otherwise (loop for cur in (cdr sight)
+		     for n from 1
+		     with max = (car sight)
+		     do (when (>= cur max) (return n))
+		     finally (return n)))))
+
+(defmacro for-2d-array ((arr i j) array &body body)
+  (let ((h (gensym)) (w (gensym)))
+    `(let* ((,arr ,array)
+	    (,h (array-dimension ,arr 0))
+	    (,w (array-dimension ,arr 1)))
+       (loop for ,i below ,h
+	     do (loop for ,j below ,w
+		      do ,@body)))))
 
 (defun d8/1 ()
-  (let ((vmap (visibility-map (d8/load-data))))
-    (loop for n below (array-total-size vmap)
-	  count (row-major-aref vmap n))))
+  (let ((visible-count 0))
+    (for-2d-array (arr i j) (d8/load-data)
+      (when (or (tree-visible? (line-of-sight-left arr i j))
+		(tree-visible? (line-of-sight-right arr i j))
+		(tree-visible? (line-of-sight-top arr i j))
+		(tree-visible? (line-of-sight-bottom arr i j)))
+	(incf visible-count)))
+    visible-count))
+
+(defun d8/2 ()
+  (let (scenic-score)
+    (for-2d-array (arr i j) (d8/load-data)
+      (push (* (viewing-distance (line-of-sight-left arr i j))
+	       (viewing-distance (line-of-sight-right arr i j))
+	       (viewing-distance (line-of-sight-top arr i j))
+	       (viewing-distance (line-of-sight-bottom arr i j)))
+	    scenic-score))
+    (reduce #'max scenic-score)))
+
