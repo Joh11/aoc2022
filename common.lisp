@@ -32,3 +32,7 @@
 
 (defmacro swap-args (fun)
   `(lambda (a b) (,fun b a)))
+
+(defun valid-coords? (array &rest coords)
+  (and (= (length coords) (array-rank array))
+       (every (lambda (i n) (and (< i n) (<= 0 i))) coords (array-dimensions array))))

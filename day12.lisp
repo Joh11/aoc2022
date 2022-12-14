@@ -18,10 +18,6 @@
 	  finally (return (list start end (make-array (list (length rows) (length (car rows)))
 						      :initial-contents rows))))))
 
-(defun valid-coords? (array &rest coords)
-  (and (= (length coords) (array-rank array))
-       (every (lambda (i n) (and (< i n) (<= 0 i))) coords (array-dimensions array))))
-
 (defun can-climb? (current-height next-height)
   (<= (- next-height current-height) 1))
 
