@@ -1,7 +1,7 @@
 (in-package #:aoc2022)
 
 (defun d12/load-data ()
-  (with-open-file (f "data/day12") ;; "data/day12"
+  (with-open-file (f "data/day12")
     (loop for l = (read-line f nil)
 	  with start = nil
 	  with end = nil
@@ -62,6 +62,6 @@
   (destructuring-bind (starting-point end-point hm) (d12/load-data)
     (declare (ignore starting-point))
     (loop for (i j) in (find-indices-2d hm (partial-end <= 1))
-	  with sp = (shortest-path-tree hm end-point (lambda (a b) (can-climb? b a)))
+	  with sp = (shortest-path-tree hm end-point (swap-args can-climb?))
 	  collect (aref sp i j) into steps
 	  finally (return (apply #'min steps)))))

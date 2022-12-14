@@ -29,3 +29,6 @@
 (defmacro aif (test then &optional else)
   `(let ((it ,test))
      (if it ,then ,else)))
+
+(defmacro swap-args (fun)
+  `(lambda (a b) (,fun b a)))
