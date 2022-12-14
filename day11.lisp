@@ -31,14 +31,14 @@
   (destructuring-bind (div a b) test
     (if (multiple? level div) a b)))
 
-(defun all-monkeys-round (monkeys)
+(defun all-monkeys-round (monkeys &key (reduce-op (lambda (n) (floor n 3))))
   (loop for (items operation test) across monkeys
 	with ninspected-items = nil
 	for n from 0 do
 	  (push 0 ninspected-items)
 	  (loop for item in items for i from 0 do
 	    (incf (car ninspected-items))
-	    (let* ((new-level (floor (funcall operation item) 3))
+	    (let* ((new-level (funcall reduce-op (funcall operation item)))
 		   (next-monkey (next-monkey test new-level)))
 	      ;; append at the back of the items of the monkey
 	      (setf (car (aref monkeys next-monkey))
@@ -54,3 +54,11 @@
     (setf inspected-items (sort inspected-items #'>))
     (* (first inspected-items) (second inspected-items))))
 
+(defun d11/2 ()
+  (let* ((monkeys (d11/load-data))
+	 (inspected-items (loop for i below (array-dimension monkeys 0) collect 0))
+	 (lcm (apply #'lcm (map 'list (lambda (m) (car (third m))) monkeys))))
+    (dotimes (i 10000)
+      (setf inspected-items (mapcar #'+ inspected-items (all-monkeys-round monkeys :reduce-op (partial-end mod lcm)))))
+    (setf inspected-items (sort inspected-items #'>))
+    (* (first inspected-items) (second inspected-items))))
