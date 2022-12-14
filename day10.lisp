@@ -22,7 +22,7 @@
 	while (not (null instructions))
 	with x = 1
 	with xs = nil
-	;; or ((timer . instruction)...)
+	;; or (timer . instruction)
 	with current = nil do
 	  ;; maybe schedule future instruction
 	  (unless current
